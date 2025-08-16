@@ -3,22 +3,22 @@ import { adminDb } from "@/lib/firebase-admin";
 import { CreateLogRequest } from "@/types/log";
 
 // Configure the route as dynamic since it uses request data
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
     const body: CreateLogRequest = await request.json();
-    const { message, level, userId, metadata } = body;
+    const { userid, application, timestamp, logger, level, message, metadata } =
+      body;
 
     // Validate required fields
-    if (!message || !level || !userId) {
+    if (!userid || !application || !timestamp || !message) {
       return NextResponse.json(
-        { error: "Message, level, and userId are required" },
+        { error: "UserId, application, timestamp and message are required" },
         { status: 400 },
       );
     }
 
-    // Validate log level
     const validLevels = ["info", "warning", "error", "debug"];
     if (!validLevels.includes(level)) {
       return NextResponse.json(
@@ -29,18 +29,7 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
-
-    // Create log entry in Firestore
-    const logData = {
-      message,
-      level,
-      userId,
-      timestamp: new Date(),
-      metadata: metadata || null,
-    };
-
-    const docRef = await adminDb.collection("logs").add(logData);
-
+    const docRef = await adminDb.collection("logs").add(body);
     return NextResponse.json({
       success: true,
       message: "Log added successfully",

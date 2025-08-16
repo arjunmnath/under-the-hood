@@ -84,7 +84,7 @@ export default function LogCard({ log }: LogCardProps) {
               
               <div className="flex items-center gap-1 text-xs text-gray-500">
                 <User className="w-3 h-3" />
-                <span>User: {log.userId.slice(0, 8)}...</span>
+                <span>User: {log.userid}</span>
               </div>
 
               {log.metadata && Object.keys(log.metadata).length > 0 && (

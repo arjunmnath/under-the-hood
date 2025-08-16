@@ -1,15 +1,23 @@
 export interface LogEntry {
   id: string;
+  userid: string;
+  application: string;
+  timestamp: string;
+  logger: string;
+  level: "warning" | "info" | "debug" | "info";
+  log_value: number;
   message: string;
-  level: 'info' | 'warning' | 'error' | 'debug';
-  userId: string;
-  timestamp: any; // Firestore timestamp
   metadata?: Record<string, any>;
 }
 
 export interface CreateLogRequest {
+  id: string;
+  userid: string;
+  application: string;
+  timestamp: string;
+  logger: string;
+  level: "warning" | "info" | "debug" | "info";
+  log_value: number;
   message: string;
-  level: 'info' | 'warning' | 'error' | 'debug';
-  userId: string;
   metadata?: Record<string, any>;
 }
