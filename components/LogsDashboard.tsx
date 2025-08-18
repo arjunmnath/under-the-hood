@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { 
   LogOut, 
   Loader2, 
@@ -19,7 +20,9 @@ import {
   RefreshCw,
   Database,
   Clock,
-  User
+  User,
+  Code,
+  Settings
 } from 'lucide-react';
 
 export default function LogsDashboard() {
@@ -28,7 +31,14 @@ export default function LogsDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [levelFilter, setLevelFilter] = useState<string>('all');
+  const [applicationFilter, setApplicationFilter] = useState<string>('all');
+  const [loggerFilter, setLoggerFilter] = useState<string>('all');
+  const [useridFilter, setUseridFilter] = useState<string>('');
   const [isConnected, setIsConnected] = useState(false);
+
+  // Get unique values for filter dropdowns
+  const uniqueApplications = [...new Set(logs.map(log => log.application))];
+  const uniqueLoggers = [...new Set(logs.map(log => log.logger))];
 
   useEffect(() => {
     if (!user) return;
@@ -37,28 +47,38 @@ export default function LogsDashboard() {
 
     const setupRealTimeListener = () => {
       try {
-        // Create query for user's logs
+        // Start with base query
         let q = query(
           collection(db, 'logs'),
           orderBy('timestamp', 'desc')
         );
 
-        // Add level filter if not 'all'
-        if (levelFilter !== 'all') {
-          q = query(
-            collection(db, 'logs'),
-            where('level', '==', levelFilter),
-            orderBy('timestamp', 'desc')
-          );
-        }
-
         unsubscribe = onSnapshot(
           q,
           (snapshot) => {
-            const newLogs: LogEntry[] = snapshot.docs.map((doc) => ({
+            let newLogs: LogEntry[] = snapshot.docs.map((doc) => ({
               id: doc.id,
               ...doc.data(),
             } as LogEntry));
+
+            // Apply client-side filters
+            if (levelFilter !== 'all') {
+              newLogs = newLogs.filter(log => log.level === levelFilter);
+            }
+            
+            if (applicationFilter !== 'all') {
+              newLogs = newLogs.filter(log => log.application === applicationFilter);
+            }
+            
+            if (loggerFilter !== 'all') {
+              newLogs = newLogs.filter(log => log.logger === loggerFilter);
+            }
+            
+            if (useridFilter.trim()) {
+              newLogs = newLogs.filter(log => 
+                log.userid.toLowerCase().includes(useridFilter.toLowerCase())
+              );
+            }
 
             setLogs(newLogs);
             setLoading(false);
@@ -87,7 +107,7 @@ export default function LogsDashboard() {
         unsubscribe();
       }
     };
-  }, [user, levelFilter]);
+  }, [user, levelFilter, applicationFilter, loggerFilter, useridFilter]);
 
   const handleLogout = async () => {
     try {
@@ -97,8 +117,20 @@ export default function LogsDashboard() {
     }
   };
 
+  const clearFilters = () => {
+    setLevelFilter('all');
+    setApplicationFilter('all');
+    setLoggerFilter('all');
+    setUseridFilter('');
+  };
+
   const logCounts = logs.reduce((acc, log) => {
     acc[log.level] = (acc[log.level] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const applicationCounts = logs.reduce((acc, log) => {
+    acc[log.application] = (acc[log.application] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
@@ -125,7 +157,7 @@ export default function LogsDashboard() {
                   <Activity className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-white">Under The Hood</h1>
+                  <h1 className="text-xl font-bold text-white">Logs Dashboard</h1>
                   <p className="text-sm text-gray-400">Real-time application monitoring</p>
                 </div>
               </div>
@@ -162,7 +194,7 @@ export default function LogsDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8">
           <Card className="bg-gray-800/50 border-gray-700">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -218,6 +250,18 @@ export default function LogsDashboard() {
               </div>
             </CardContent>
           </Card>
+
+          <Card className="bg-gray-800/50 border-gray-700">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-400">Apps</p>
+                  <p className="text-2xl font-bold text-purple-400">{uniqueApplications.length}</p>
+                </div>
+                <Code className="w-8 h-8 text-purple-400" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Filters */}
@@ -228,20 +272,30 @@ export default function LogsDashboard() {
                 <Filter className="w-5 h-5" />
                 Filters
               </CardTitle>
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <Clock className="w-4 h-4" />
-                Last updated: {new Date().toLocaleTimeString()}
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={clearFilters}
+                  className="text-gray-300 border-gray-600 hover:bg-gray-700"
+                >
+                  Clear All
+                </Button>
+                <div className="flex items-center gap-2 text-sm text-gray-400">
+                  <Clock className="w-4 h-4" />
+                  Last updated: {new Date().toLocaleTimeString()}
+                </div>
               </div>
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="flex flex-col gap-2">
                 <label htmlFor="level-filter" className="text-sm font-medium text-gray-300">
                   Level:
                 </label>
                 <Select value={levelFilter} onValueChange={setLevelFilter}>
-                  <SelectTrigger className="w-32 bg-gray-700 border-gray-600 text-white">
+                  <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
                     <SelectValue placeholder="All levels" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-700 border-gray-600">
@@ -252,6 +306,57 @@ export default function LogsDashboard() {
                     <SelectItem value="debug" className="text-gray-400 hover:bg-gray-600">Debug</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label htmlFor="application-filter" className="text-sm font-medium text-gray-300">
+                  Application:
+                </label>
+                <Select value={applicationFilter} onValueChange={setApplicationFilter}>
+                  <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                    <SelectValue placeholder="All applications" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-700 border-gray-600">
+                    <SelectItem value="all" className="text-white hover:bg-gray-600">All</SelectItem>
+                    {uniqueApplications.map((app) => (
+                      <SelectItem key={app} value={app} className="text-purple-400 hover:bg-gray-600">
+                        {app} ({applicationCounts[app]})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label htmlFor="logger-filter" className="text-sm font-medium text-gray-300">
+                  Logger:
+                </label>
+                <Select value={loggerFilter} onValueChange={setLoggerFilter}>
+                  <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                    <SelectValue placeholder="All loggers" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-700 border-gray-600">
+                    <SelectItem value="all" className="text-white hover:bg-gray-600">All</SelectItem>
+                    {uniqueLoggers.map((logger) => (
+                      <SelectItem key={logger} value={logger} className="text-green-400 hover:bg-gray-600">
+                        {logger}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label htmlFor="userid-filter" className="text-sm font-medium text-gray-300">
+                  User ID:
+                </label>
+                <Input
+                  id="userid-filter"
+                  placeholder="Filter by user ID..."
+                  value={useridFilter}
+                  onChange={(e) => setUseridFilter(e.target.value)}
+                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                />
               </div>
             </div>
           </CardContent>
@@ -272,9 +377,12 @@ export default function LogsDashboard() {
             <Card className="bg-gray-800/50 border-gray-700">
               <CardContent className="p-8 text-center">
                 <Activity className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-300 mb-2">No logs yet</h3>
+                <h3 className="text-lg font-medium text-gray-300 mb-2">No logs found</h3>
                 <p className="text-gray-500">
-                  Your logs will appear here in real-time as they are generated.
+                  {levelFilter !== 'all' || applicationFilter !== 'all' || loggerFilter !== 'all' || useridFilter.trim()
+                    ? 'No logs match your current filters. Try adjusting the filters above.'
+                    : 'Your logs will appear here in real-time as they are generated.'
+                  }
                 </p>
               </CardContent>
             </Card>
