@@ -10,6 +10,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { 
@@ -22,7 +34,10 @@ import {
   Clock,
   User,
   Code,
-  Settings
+  Settings,
+  Trash2,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 
 export default function LogsDashboard() {
@@ -35,6 +50,9 @@ export default function LogsDashboard() {
   const [loggerFilter, setLoggerFilter] = useState<string>('all');
   const [useridFilter, setUseridFilter] = useState<string>('');
   const [isConnected, setIsConnected] = useState(false);
+  const [selectedLogs, setSelectedLogs] = useState<Set<string>>(new Set());
+  const [showSelection, setShowSelection] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Get unique values for filter dropdowns
   const uniqueApplications = [...new Set(logs.map(log => log.application))];
@@ -109,6 +127,82 @@ export default function LogsDashboard() {
     };
   }, [user, levelFilter, applicationFilter, loggerFilter, useridFilter]);
 
+  const handleDeleteLog = async (logId: string) => {
+    try {
+      const response = await fetch(`/api/logs/${logId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete log');
+      }
+
+      // Remove from selected logs if it was selected
+      setSelectedLogs(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(logId);
+        return newSet;
+      });
+    } catch (error) {
+      console.error('Error deleting log:', error);
+      setError('Failed to delete log');
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedLogs.size === 0) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch('/api/logs/bulk-delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          logIds: Array.from(selectedLogs),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete logs');
+      }
+
+      setSelectedLogs(new Set());
+      setShowSelection(false);
+    } catch (error) {
+      console.error('Error bulk deleting logs:', error);
+      setError('Failed to delete selected logs');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleSelectLog = (logId: string, selected: boolean) => {
+    setSelectedLogs(prev => {
+      const newSet = new Set(prev);
+      if (selected) {
+        newSet.add(logId);
+      } else {
+        newSet.delete(logId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedLogs.size === logs.length) {
+      setSelectedLogs(new Set());
+    } else {
+      setSelectedLogs(new Set(logs.map(log => log.id)));
+    }
+  };
+
+  const toggleSelectionMode = () => {
+    setShowSelection(!showSelection);
+    setSelectedLogs(new Set());
+  };
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -122,6 +216,8 @@ export default function LogsDashboard() {
     setApplicationFilter('all');
     setLoggerFilter('all');
     setUseridFilter('');
+    setSelectedLogs(new Set());
+    setShowSelection(false);
   };
 
   const logCounts = logs.reduce((acc, log) => {
@@ -281,6 +377,24 @@ export default function LogsDashboard() {
                 >
                   Clear All
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleSelectionMode}
+                  className="text-gray-300 border-gray-600 hover:bg-gray-700"
+                >
+                  {showSelection ? (
+                    <>
+                      <Square className="w-4 h-4 mr-2" />
+                      Cancel Selection
+                    </>
+                  ) : (
+                    <>
+                      <CheckSquare className="w-4 h-4 mr-2" />
+                      Select Logs
+                    </>
+                  )}
+                </Button>
                 <div className="flex items-center gap-2 text-sm text-gray-400">
                   <Clock className="w-4 h-4" />
                   Last updated: {new Date().toLocaleTimeString()}
@@ -362,6 +476,76 @@ export default function LogsDashboard() {
           </CardContent>
         </Card>
 
+        {/* Bulk Actions */}
+        {showSelection && (
+          <Card className="mb-6 bg-gray-800/50 border-gray-700">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSelectAll}
+                    className="text-gray-300 border-gray-600 hover:bg-gray-700"
+                  >
+                    {selectedLogs.size === logs.length ? 'Deselect All' : 'Select All'}
+                  </Button>
+                  <span className="text-sm text-gray-400">
+                    {selectedLogs.size} of {logs.length} logs selected
+                  </span>
+                </div>
+                
+                {selectedLogs.size > 0 && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        disabled={isDeleting}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        {isDeleting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Deleting...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete Selected ({selectedLogs.size})
+                          </>
+                        )}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="bg-gray-800 border-gray-700">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-white">
+                          Delete Selected Logs
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-gray-400">
+                          Are you sure you want to delete {selectedLogs.size} selected log{selectedLogs.size > 1 ? 's' : ''}? 
+                          This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600">
+                          Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleBulkDelete}
+                          className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Error Display */}
         {error && (
           <Card className="mb-6 border-red-500 bg-red-500/10">
@@ -388,7 +572,14 @@ export default function LogsDashboard() {
             </Card>
           ) : (
             logs.map((log) => (
-              <LogCard key={log.id} log={log} />
+              <LogCard 
+                key={log.id} 
+                log={log}
+                isSelected={selectedLogs.has(log.id)}
+                onSelect={handleSelectLog}
+                onDelete={handleDeleteLog}
+                showSelection={showSelection}
+              />
             ))
           )}
         </div>
