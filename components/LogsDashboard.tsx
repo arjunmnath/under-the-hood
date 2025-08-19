@@ -1,17 +1,24 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { collection, query, orderBy, onSnapshot, where, Unsubscribe } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { useAuth } from '@/contexts/AuthContext';
-import { LogEntry } from '@/types/log';
-import LogCard from './LogCard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Checkbox } from '@/components/ui/checkbox';
-import { 
+import { useEffect, useState } from "react";
+import {
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  where,
+  Unsubscribe,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useAuth } from "@/contexts/AuthContext";
+import { LogEntry } from "@/types/log";
+import LogCard from "./LogCard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -21,13 +28,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { 
-  LogOut, 
-  Loader2, 
-  Activity, 
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import {
+  LogOut,
+  Loader2,
+  Activity,
   Filter,
   RefreshCw,
   Database,
@@ -37,26 +50,30 @@ import {
   Settings,
   Trash2,
   CheckSquare,
-  Square
-} from 'lucide-react';
+  Square,
+} from "lucide-react";
 
 export default function LogsDashboard() {
   const { user, logout } = useAuth();
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>('');
-  const [levelFilter, setLevelFilter] = useState<string>('all');
-  const [applicationFilter, setApplicationFilter] = useState<string>('all');
-  const [loggerFilter, setLoggerFilter] = useState<string>('all');
-  const [useridFilter, setUseridFilter] = useState<string>('');
+  const [error, setError] = useState<string>("");
+  const [levelFilter, setLevelFilter] = useState<string>("all");
+  const [applicationFilter, setApplicationFilter] = useState<string>("all");
+  const [loggerFilter, setLoggerFilter] = useState<string>("all");
+  const [useridFilter, setUseridFilter] = useState<string>("");
   const [isConnected, setIsConnected] = useState(false);
   const [selectedLogs, setSelectedLogs] = useState<Set<string>>(new Set());
   const [showSelection, setShowSelection] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Get unique values for filter dropdowns
-  const uniqueApplications = [...new Set(logs.map(log => log.application))];
-  const uniqueLoggers = [...new Set(logs.map(log => log.logger))];
+  let uniqueApplications = [
+    ...Array.from(new Set(logs.map((log) => log.application))),
+  ];
+  let uniqueLoggers = [
+    ...Array.from(new Set(logs.map((log) => log.logger))),
+  ];
 
   useEffect(() => {
     if (!user) return;
@@ -66,53 +83,55 @@ export default function LogsDashboard() {
     const setupRealTimeListener = () => {
       try {
         // Start with base query
-        let q = query(
-          collection(db, 'logs'),
-          orderBy('timestamp', 'desc')
-        );
+        let q = query(collection(db, "logs"), orderBy("timestamp", "desc"));
 
         unsubscribe = onSnapshot(
           q,
           (snapshot) => {
-            let newLogs: LogEntry[] = snapshot.docs.map((doc) => ({
-              id: doc.id,
-              ...doc.data(),
-            } as LogEntry));
+            let newLogs: LogEntry[] = snapshot.docs.map(
+              (doc) =>
+                ({
+                  id: doc.id,
+                  ...doc.data(),
+                }) as LogEntry,
+            );
 
             // Apply client-side filters
-            if (levelFilter !== 'all') {
-              newLogs = newLogs.filter(log => log.level === levelFilter);
+            if (levelFilter !== "all") {
+              newLogs = newLogs.filter((log) => log.level === levelFilter);
             }
-            
-            if (applicationFilter !== 'all') {
-              newLogs = newLogs.filter(log => log.application === applicationFilter);
+
+            if (applicationFilter !== "all") {
+              newLogs = newLogs.filter(
+                (log) => log.application === applicationFilter,
+              );
             }
-            
-            if (loggerFilter !== 'all') {
-              newLogs = newLogs.filter(log => log.logger === loggerFilter);
+
+            if (loggerFilter !== "all") {
+              newLogs = newLogs.filter((log) => log.logger === loggerFilter);
             }
-            
+
             if (useridFilter.trim()) {
-              newLogs = newLogs.filter(log => 
-                log.userid.toLowerCase().includes(useridFilter.toLowerCase())
+              newLogs = newLogs.filter((log) =>
+                log.userid.toLowerCase().includes(useridFilter.toLowerCase()),
               );
             }
 
             setLogs(newLogs);
             setLoading(false);
             setIsConnected(true);
-            setError('');
+            setError("");
           },
           (error) => {
-            console.error('Error fetching logs:', error);
-            setError('Failed to fetch logs: ' + error.message);
+            console.error("Error fetching logs:", error);
+            setError("Failed to fetch logs: " + error.message);
             setLoading(false);
             setIsConnected(false);
-          }
+          },
         );
       } catch (error) {
-        console.error('Error setting up listener:', error);
-        setError('Failed to connect to database');
+        console.error("Error setting up listener:", error);
+        setError("Failed to connect to database");
         setLoading(false);
         setIsConnected(false);
       }
@@ -130,22 +149,22 @@ export default function LogsDashboard() {
   const handleDeleteLog = async (logId: string) => {
     try {
       const response = await fetch(`/api/logs/${logId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete log');
+        throw new Error("Failed to delete log");
       }
 
       // Remove from selected logs if it was selected
-      setSelectedLogs(prev => {
+      setSelectedLogs((prev) => {
         const newSet = new Set(prev);
         newSet.delete(logId);
         return newSet;
       });
     } catch (error) {
-      console.error('Error deleting log:', error);
-      setError('Failed to delete log');
+      console.error("Error deleting log:", error);
+      setError("Failed to delete log");
     }
   };
 
@@ -154,10 +173,10 @@ export default function LogsDashboard() {
 
     setIsDeleting(true);
     try {
-      const response = await fetch('/api/logs/bulk-delete', {
-        method: 'DELETE',
+      const response = await fetch("/api/logs/bulk-delete", {
+        method: "DELETE",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           logIds: Array.from(selectedLogs),
@@ -165,21 +184,21 @@ export default function LogsDashboard() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete logs');
+        throw new Error("Failed to delete logs");
       }
 
       setSelectedLogs(new Set());
       setShowSelection(false);
     } catch (error) {
-      console.error('Error bulk deleting logs:', error);
-      setError('Failed to delete selected logs');
+      console.error("Error bulk deleting logs:", error);
+      setError("Failed to delete selected logs");
     } finally {
       setIsDeleting(false);
     }
   };
 
   const handleSelectLog = (logId: string, selected: boolean) => {
-    setSelectedLogs(prev => {
+    setSelectedLogs((prev) => {
       const newSet = new Set(prev);
       if (selected) {
         newSet.add(logId);
@@ -194,7 +213,7 @@ export default function LogsDashboard() {
     if (selectedLogs.size === logs.length) {
       setSelectedLogs(new Set());
     } else {
-      setSelectedLogs(new Set(logs.map(log => log.id)));
+      setSelectedLogs(new Set(logs.map((log) => log.id)));
     }
   };
 
@@ -207,28 +226,34 @@ export default function LogsDashboard() {
     try {
       await logout();
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error("Error signing out:", error);
     }
   };
 
   const clearFilters = () => {
-    setLevelFilter('all');
-    setApplicationFilter('all');
-    setLoggerFilter('all');
-    setUseridFilter('');
+    setLevelFilter("all");
+    setApplicationFilter("all");
+    setLoggerFilter("all");
+    setUseridFilter("");
     setSelectedLogs(new Set());
     setShowSelection(false);
   };
 
-  const logCounts = logs.reduce((acc, log) => {
-    acc[log.level] = (acc[log.level] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const logCounts = logs.reduce(
+    (acc, log) => {
+      acc[log.level] = (acc[log.level] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
-  const applicationCounts = logs.reduce((acc, log) => {
-    acc[log.application] = (acc[log.application] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const applicationCounts = logs.reduce(
+    (acc, log) => {
+      acc[log.application] = (acc[log.application] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
   if (loading) {
     return (
@@ -253,18 +278,28 @@ export default function LogsDashboard() {
                   <Activity className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-white">Logs Dashboard</h1>
-                  <p className="text-sm text-gray-400">Real-time application monitoring</p>
+                  <h1 className="text-xl font-bold text-white">
+                    Logs Dashboard
+                  </h1>
+                  <p className="text-sm text-gray-400">
+                    Real-time application monitoring
+                  </p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-2">
-                <Badge 
-                  variant={isConnected ? "default" : "destructive"} 
-                  className={isConnected ? "bg-green-500/10 text-green-400 border-green-500/30" : ""}
+                <Badge
+                  variant={isConnected ? "default" : "destructive"}
+                  className={
+                    isConnected
+                      ? "bg-green-500/10 text-green-400 border-green-500/30"
+                      : ""
+                  }
                 >
-                  <div className={`w-2 h-2 rounded-full mr-1 ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-                  {isConnected ? 'Connected' : 'Disconnected'}
+                  <div
+                    className={`w-2 h-2 rounded-full mr-1 ${isConnected ? "bg-green-400 animate-pulse" : "bg-red-400"}`}
+                  />
+                  {isConnected ? "Connected" : "Disconnected"}
                 </Badge>
               </div>
             </div>
@@ -274,9 +309,9 @@ export default function LogsDashboard() {
                 <User className="w-4 h-4" />
                 {user?.email}
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleLogout}
                 className="text-gray-300 hover:text-white hover:bg-gray-700"
               >
@@ -295,7 +330,9 @@ export default function LogsDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-400">Total Logs</p>
+                  <p className="text-sm font-medium text-gray-400">
+                    Total Logs
+                  </p>
                   <p className="text-2xl font-bold text-white">{logs.length}</p>
                 </div>
                 <Database className="w-8 h-8 text-blue-400" />
@@ -308,7 +345,9 @@ export default function LogsDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-400">Info</p>
-                  <p className="text-2xl font-bold text-blue-400">{logCounts.info || 0}</p>
+                  <p className="text-2xl font-bold text-blue-400">
+                    {logCounts.info || 0}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -319,7 +358,9 @@ export default function LogsDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-400">Warnings</p>
-                  <p className="text-2xl font-bold text-yellow-400">{logCounts.warning || 0}</p>
+                  <p className="text-2xl font-bold text-yellow-400">
+                    {logCounts.warning || 0}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -330,7 +371,9 @@ export default function LogsDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-400">Errors</p>
-                  <p className="text-2xl font-bold text-red-400">{logCounts.error || 0}</p>
+                  <p className="text-2xl font-bold text-red-400">
+                    {logCounts.error || 0}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -341,7 +384,9 @@ export default function LogsDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-400">Debug</p>
-                  <p className="text-2xl font-bold text-gray-400">{logCounts.debug || 0}</p>
+                  <p className="text-2xl font-bold text-gray-400">
+                    {logCounts.debug || 0}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -352,7 +397,9 @@ export default function LogsDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-400">Apps</p>
-                  <p className="text-2xl font-bold text-purple-400">{uniqueApplications.length}</p>
+                  <p className="text-2xl font-bold text-purple-400">
+                    {uniqueApplications.length}
+                  </p>
                 </div>
                 <Code className="w-8 h-8 text-purple-400" />
               </div>
@@ -369,11 +416,11 @@ export default function LogsDashboard() {
                 Filters
               </CardTitle>
               <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={clearFilters}
-                  className="text-gray-300 border-gray-600 hover:bg-gray-700"
+                  className="text-gray-300 border-gray-600 bg-gray-700 hover:bg-gray-800"
                 >
                   Clear All
                 </Button>
@@ -381,7 +428,7 @@ export default function LogsDashboard() {
                   variant="outline"
                   size="sm"
                   onClick={toggleSelectionMode}
-                  className="text-gray-300 border-gray-600 hover:bg-gray-700"
+                  className="text-gray-300 border-gray-600 hover:bg-gray-800 bg-gray-700"
                 >
                   {showSelection ? (
                     <>
@@ -405,7 +452,10 @@ export default function LogsDashboard() {
           <CardContent className="pt-0">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="flex flex-col gap-2">
-                <label htmlFor="level-filter" className="text-sm font-medium text-gray-300">
+                <label
+                  htmlFor="level-filter"
+                  className="text-sm font-medium text-gray-300"
+                >
                   Level:
                 </label>
                 <Select value={levelFilter} onValueChange={setLevelFilter}>
@@ -413,36 +463,80 @@ export default function LogsDashboard() {
                     <SelectValue placeholder="All levels" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-700 border-gray-600">
-                    <SelectItem value="all" className="text-white hover:bg-gray-600">All</SelectItem>
-                    <SelectItem value="info" className="text-blue-400 hover:bg-gray-600">Info</SelectItem>
-                    <SelectItem value="warning" className="text-yellow-400 hover:bg-gray-600">Warning</SelectItem>
-                    <SelectItem value="error" className="text-red-400 hover:bg-gray-600">Error</SelectItem>
-                    <SelectItem value="debug" className="text-gray-400 hover:bg-gray-600">Debug</SelectItem>
+                    <SelectItem
+                      value="all"
+                      className="text-white hover:bg-gray-600"
+                    >
+                      All
+                    </SelectItem>
+                    <SelectItem
+                      value="info"
+                      className="text-blue-400 hover:bg-gray-600"
+                    >
+                      Info
+                    </SelectItem>
+                    <SelectItem
+                      value="warning"
+                      className="text-yellow-400 hover:bg-gray-600"
+                    >
+                      Warning
+                    </SelectItem>
+                    <SelectItem
+                      value="error"
+                      className="text-red-400 hover:bg-gray-600"
+                    >
+                      Error
+                    </SelectItem>
+                    <SelectItem
+                      value="debug"
+                      className="text-gray-400 hover:bg-gray-600"
+                    >
+                      Debug
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="flex flex-col gap-2">
-                <label htmlFor="application-filter" className="text-sm font-medium text-gray-300">
+                <label
+                  htmlFor="application-filter"
+                  className="text-sm font-medium text-gray-300"
+                >
                   Application:
                 </label>
-                <Select value={applicationFilter} onValueChange={setApplicationFilter}>
+                <Select
+                  value={applicationFilter}
+                  onValueChange={setApplicationFilter}
+                >
                   <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
                     <SelectValue placeholder="All applications" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-700 border-gray-600">
-                    <SelectItem value="all" className="text-white hover:bg-gray-600">All</SelectItem>
-                    {uniqueApplications.map((app) => (
-                      <SelectItem key={app} value={app} className="text-purple-400 hover:bg-gray-600">
+                    <SelectItem
+                      value="all"
+                      className="text-white hover:bg-gray-600"
+                    >
+                      All
+                    </SelectItem>
+                    {uniqueApplications.map((app) => {
+                      console.log(app);
+                      return <SelectItem
+                        key={app}
+                        value={app}
+                        className="text-purple-400 hover:bg-gray-600"
+                      >
                         {app} ({applicationCounts[app]})
                       </SelectItem>
-                    ))}
+                    })}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="flex flex-col gap-2">
-                <label htmlFor="logger-filter" className="text-sm font-medium text-gray-300">
+                <label
+                  htmlFor="logger-filter"
+                  className="text-sm font-medium text-gray-300"
+                >
                   Logger:
                 </label>
                 <Select value={loggerFilter} onValueChange={setLoggerFilter}>
@@ -450,9 +544,18 @@ export default function LogsDashboard() {
                     <SelectValue placeholder="All loggers" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-700 border-gray-600">
-                    <SelectItem value="all" className="text-white hover:bg-gray-600">All</SelectItem>
+                    <SelectItem
+                      value="all"
+                      className="text-white hover:bg-gray-600"
+                    >
+                      All
+                    </SelectItem>
                     {uniqueLoggers.map((logger) => (
-                      <SelectItem key={logger} value={logger} className="text-green-400 hover:bg-gray-600">
+                      <SelectItem
+                        key={logger}
+                        value={logger}
+                        className="text-green-400 hover:bg-gray-600"
+                      >
                         {logger}
                       </SelectItem>
                     ))}
@@ -461,7 +564,10 @@ export default function LogsDashboard() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label htmlFor="userid-filter" className="text-sm font-medium text-gray-300">
+                <label
+                  htmlFor="userid-filter"
+                  className="text-sm font-medium text-gray-300"
+                >
                   User ID:
                 </label>
                 <Input
@@ -486,15 +592,17 @@ export default function LogsDashboard() {
                     variant="outline"
                     size="sm"
                     onClick={handleSelectAll}
-                    className="text-gray-300 border-gray-600 hover:bg-gray-700"
+                    className="text-gray-300 border-gray-600 hover:bg-gray-800 bg-gray-700"
                   >
-                    {selectedLogs.size === logs.length ? 'Deselect All' : 'Select All'}
+                    {selectedLogs.size === logs.length
+                      ? "Deselect All"
+                      : "Select All"}
                   </Button>
                   <span className="text-sm text-gray-400">
                     {selectedLogs.size} of {logs.length} logs selected
                   </span>
                 </div>
-                
+
                 {selectedLogs.size > 0 && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -523,8 +631,9 @@ export default function LogsDashboard() {
                           Delete Selected Logs
                         </AlertDialogTitle>
                         <AlertDialogDescription className="text-gray-400">
-                          Are you sure you want to delete {selectedLogs.size} selected log{selectedLogs.size > 1 ? 's' : ''}? 
-                          This action cannot be undone.
+                          Are you sure you want to delete {selectedLogs.size}{" "}
+                          selected log{selectedLogs.size > 1 ? "s" : ""}? This
+                          action cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -561,19 +670,23 @@ export default function LogsDashboard() {
             <Card className="bg-gray-800/50 border-gray-700">
               <CardContent className="p-8 text-center">
                 <Activity className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-300 mb-2">No logs found</h3>
+                <h3 className="text-lg font-medium text-gray-300 mb-2">
+                  No logs found
+                </h3>
                 <p className="text-gray-500">
-                  {levelFilter !== 'all' || applicationFilter !== 'all' || loggerFilter !== 'all' || useridFilter.trim()
-                    ? 'No logs match your current filters. Try adjusting the filters above.'
-                    : 'Your logs will appear here in real-time as they are generated.'
-                  }
+                  {levelFilter !== "all" ||
+                  applicationFilter !== "all" ||
+                  loggerFilter !== "all" ||
+                  useridFilter.trim()
+                    ? "No logs match your current filters. Try adjusting the filters above."
+                    : "Your logs will appear here in real-time as they are generated."}
                 </p>
               </CardContent>
             </Card>
           ) : (
             logs.map((log) => (
-              <LogCard 
-                key={log.id} 
+              <LogCard
+                key={log.id}
                 log={log}
                 isSelected={selectedLogs.has(log.id)}
                 onSelect={handleSelectLog}
