@@ -1,4 +1,4 @@
-# Firebase Real-time Logs Dashboard
+# Under The Hood
 
 A modern Next.js application for monitoring application logs in real-time using Firebase Firestore and Authentication.
 
@@ -8,8 +8,6 @@ A modern Next.js application for monitoring application logs in real-time using 
 - **Secure Authentication**: Firebase Authentication with email/password login
 - **Log Levels**: Support for info, warning, error, and debug log levels
 - **User Isolation**: Users can only view their own logs
-- **Dark Theme**: Modern dark UI optimized for log monitoring
-- **Responsive Design**: Works on desktop and mobile devices
 - **Advanced Filtering**: Filter logs by level and other criteria
 
 ## Tech Stack
@@ -79,17 +77,25 @@ npm run dev
 Send logs to your application via POST request to `/api/logs`:
 
 ```javascript
-const logData = {
-  message: "User login successful",
-  level: "info", // info, warning, error, debug
-  userId: "user_firebase_uid",
-  metadata: { // optional
-    endpoint: "/api/auth/login",
-    duration: "234ms"
+const logData =  {
+  'level': Level.SHOUT.name.toLowerCase(),
+  'message': 'App crashed unexpectedly',
+  'log_value': Level.SHOUT.value,
+  'logger': 'crashLogger',
+  'userid': 'userid_placeholder', // Replace this with actual user ID if available
+  'timestamp': DateTime.now().toIso8601String(),
+  'application': packageInfo.packageName,
+  'metadata': {
+    'error': error.toString(),
+    'stackTrace': stackTrace.toString(),
+    'zone': {
+      'currentZone': Zone.current.toString(),
+      'parentZone': Zone.current.parent.toString(),
+    },
   }
 };
 
-fetch('/api/logs', {
+fetch('https://logs.arjunmnath.me/api/logs', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -97,74 +103,6 @@ fetch('/api/logs', {
   body: JSON.stringify(logData)
 });
 ```
-
-### Flutter Integration Example
-
-```dart
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-
-class LogService {
-  static const String _baseUrl = 'https://your-app.vercel.app';
-  
-  static Future<void> sendLog(String message, String level, String userId, [Map<String, dynamic>? metadata]) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/api/logs'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'message': message,
-          'level': level,
-          'userId': userId,
-          'metadata': metadata,
-        }),
-      );
-      
-      if (response.statusCode != 200) {
-        print('Failed to send log: ${response.body}');
-      }
-    } catch (e) {
-      print('Error sending log: $e');
-    }
-  }
-}
-
-// Usage
-await LogService.sendLog('User completed onboarding', 'info', currentUser.uid);
-```
-
-## Features Breakdown
-
-### Real-time Dashboard
-- Automatically updates when new logs arrive
-- Color-coded log levels for easy identification
-- Expandable metadata sections
-- Responsive design for all screen sizes
-
-### Authentication
-- Secure Firebase Authentication
-- User-specific log isolation
-- Session management
-
-### API Security
-- Firebase Admin SDK for secure server-side operations
-- Input validation and error handling
-- User authentication verification
-
-### UI/UX
-- Modern dark theme optimized for log monitoring
-- Smooth animations and transitions
-- Professional dashboard layout
-- Mobile-responsive design
-
-## Deployment
-
-The application can be deployed to platforms like Vercel, Netlify, or any Node.js hosting service. Make sure to:
-
-1. Set up environment variables in your deployment platform
-2. Configure Firebase project settings
-3. Update CORS settings if needed
-4. Test the API endpoints after deployment
 
 ## Contributing
 
