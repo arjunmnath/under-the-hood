@@ -26,7 +26,7 @@ export interface LogEntry {
   logger: string;
   level: NormalizedLogLevel;
   originalLevel: RawLogLevel; 
-  log_value: number;
+  value: number;
   message: string;
   metadata?: Record<string, any>;
 }
@@ -37,7 +37,7 @@ export interface CreateLogRequest {
   timestamp: string;
   logger: string;
   level: RawLogLevel; 
-  log_value: number;
+  value: number;
   message: string;
   metadata?: Record<string, any>;
 }
