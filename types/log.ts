@@ -1,22 +1,44 @@
+export type RawLogLevel =
+  | "OFF"
+  | "SHOUT"
+  | "SEVERE"
+  | "WARNING"
+  | "INFO"
+  | "CONFIG"
+  | "FINE"
+  | "FINER"
+  | "FINEST"
+  | "off"
+  | "shout"
+  | "severe"
+  | "warning"
+  | "info"
+  | "config"
+  | "fine"
+  | "finer"
+  | "finest";
+
+export type NormalizedLogLevel = "info" | "warning" | "error" | "debug";
+
 export interface LogEntry {
   id: string;
   userid: string;
   application: string;
   timestamp: string;
   logger: string;
-  level: "warning" | "info" | "debug" | "info";
+  level: NormalizedLogLevel;
+  originalLevel: RawLogLevel; 
   log_value: number;
   message: string;
   metadata?: Record<string, any>;
 }
 
 export interface CreateLogRequest {
-  id: string;
   userid: string;
   application: string;
   timestamp: string;
   logger: string;
-  level: "warning" | "info" | "debug" | "info";
+  level: RawLogLevel; 
   log_value: number;
   message: string;
   metadata?: Record<string, any>;
