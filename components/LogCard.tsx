@@ -160,17 +160,17 @@ export default function LogCard({
               {/*     </div> */}
               {/*   </div> */}
               {/* )} */}
-              {log.metadata.error && (
+              {log.metadata?.error && (
                 <div className="mt-3">
                   <p className="text-xs text-red-400 font-medium mb-1">
                     Error:
                   </p>
                   <div className="bg-gray-900 border border-gray-700 rounded p-2 text-xs text-red-300 font-mono overflow-x-auto">
-                    {log.metadata.error}
+                    {log.metadata?.error}
                   </div>
                 </div>
               )}
-              {log.metadata.stackTrace && (
+              {log.metadata?.stackTrace && (
                 <div className="mt-3">
                   <Button
                     variant="outline"
@@ -192,7 +192,7 @@ export default function LogCard({
                           fontSize: "12px",
                         }}
                       >
-                        {log.metadata.stackTrace}
+                        {log.metadata?.stackTrace}
                       </SyntaxHighlighter>
                     </div>
                   )}
