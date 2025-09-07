@@ -19,6 +19,7 @@ const levelMapping: Record<string, "info" | "warning" | "error" | "debug"> = {
 export async function POST(request: NextRequest) {
   try {
     const body: CreateLogRequest = await request.json();
+    body.level = body.level.toLowerCase() as CreateLogRequest["level"];
     const { userid, application, timestamp, logger, level, message, metadata } =
       body;
 
