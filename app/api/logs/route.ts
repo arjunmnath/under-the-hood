@@ -5,6 +5,17 @@ import { CreateLogRequest } from "@/types/log";
 // Configure the route as dynamic since it uses request data
 export const dynamic = "force-dynamic";
 
+const levelMapping: Record<string, "info" | "warning" | "error" | "debug"> = {
+  shout: "error",
+  severe: "error",
+  warning: "warning",
+  info: "info",
+  config: "info",
+  fine: "debug",
+  finer: "debug",
+  finest: "debug",
+};
+
 export async function POST(request: NextRequest) {
   try {
     const body: CreateLogRequest = await request.json();
@@ -19,17 +30,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const validLevels = ["info", "warning", "error", "debug"];
-    if (!validLevels.includes(level)) {
+    if (!Object.keys(levelMapping).includes(level)) {
       return NextResponse.json(
         {
-          error:
-            "Invalid log level. Must be one of: info, warning, error, debug",
+          error: `Invalid log level. Must be one of: ${Object.keys(levelMapping).join(", ")}`,
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
-    const docRef = await adminDb.collection("logs").add(body);
+
+    const mappedLevel = levelMapping[level];
+    const logData = {
+      ...body,
+      level: mappedLevel,
+      originalLevel: level, 
+    };
+    const docRef = await adminDb.collection("logs").add(logData);
     return NextResponse.json({
       success: true,
       message: "Log added successfully",
