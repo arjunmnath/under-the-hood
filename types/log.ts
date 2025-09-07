@@ -1,5 +1,4 @@
 export type RawLogLevel =
-  | "OFF"
   | "SHOUT"
   | "SEVERE"
   | "WARNING"
@@ -8,7 +7,6 @@ export type RawLogLevel =
   | "FINE"
   | "FINER"
   | "FINEST"
-  | "off"
   | "shout"
   | "severe"
   | "warning"
