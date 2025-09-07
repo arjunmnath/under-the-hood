@@ -110,7 +110,7 @@ export default function LogCard({
                 </div>
                 <div className="flex items-center gap-1">
                   <Activity className="w-3 h-3" />
-                  <span>Value: {log.log_value}</span>
+                  <span>Value: {log.value}</span>
                 </div>
               </div>
 
