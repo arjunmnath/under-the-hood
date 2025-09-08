@@ -166,7 +166,7 @@ export default function LogCard({
                     Error:
                   </p>
                   <div className="bg-gray-900 border border-gray-700 rounded p-2 text-xs text-red-300 font-mono overflow-x-auto">
-                    {log.metadata.error}
+                    {log.metadata?.error}
                   </div>
                 </div>
               )}
@@ -192,7 +192,7 @@ export default function LogCard({
                           fontSize: "12px",
                         }}
                       >
-                        {log.metadata.stackTrace}
+                        {log.metadata?.stackTrace}
                       </SyntaxHighlighter>
                     </div>
                   )}
