@@ -106,7 +106,7 @@ export default function LogCard({
                   variant="outline"
                   className={cn("text-xs font-medium", config.badgeColor)}
                 >
-                  {log.level.toUpperCase()}
+                  {log.originalLevel.toUpperCase()}
                 </Badge>
                 <Badge
                   variant="outline"
@@ -126,7 +126,7 @@ export default function LogCard({
                 </div>
               </div>
 
-              <p className="text-gray-200 text-sm leading-relaxed break-words">
+              <p className="text-gray-200 text-sm leading-relaxed break-words overflow-scroll">
                 {log.message}
               </p>
 
@@ -160,7 +160,7 @@ export default function LogCard({
               {/*     </div> */}
               {/*   </div> */}
               {/* )} */}
-              {log.metadata?.error && (
+              {log.metadata.error && log.metadata.error != 'null'  (
                 <div className="mt-3">
                   <p className="text-xs text-red-400 font-medium mb-1">
                     Error:
@@ -170,7 +170,7 @@ export default function LogCard({
                   </div>
                 </div>
               )}
-              {log.metadata?.stackTrace && (
+              {log.metadata.stackTrace && log.metadata.stackTrace != 'null' (
                 <div className="mt-3">
                   <Button
                     variant="outline"
