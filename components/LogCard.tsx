@@ -160,7 +160,7 @@ export default function LogCard({
               {/*     </div> */}
               {/*   </div> */}
               {/* )} */}
-              {log.metadata.error && log.metadata.error != 'null'  (
+              {log.metadata?.error && log.metadata?.error != 'null'  (
                 <div className="mt-3">
                   <p className="text-xs text-red-400 font-medium mb-1">
                     Error:
@@ -170,7 +170,7 @@ export default function LogCard({
                   </div>
                 </div>
               )}
-              {log.metadata.stackTrace && log.metadata.stackTrace != 'null' (
+              {log.metadata?.stackTrace && log.metadata?.stackTrace != 'null' (
                 <div className="mt-3">
                   <Button
                     variant="outline"
