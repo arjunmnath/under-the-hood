@@ -98,7 +98,7 @@ export default function LogsDashboard() {
 
             // Apply client-side filters
             if (levelFilter !== "all") {
-              newLogs = newLogs.filter((log) => log.level === levelFilter);
+              newLogs = newLogs.filter((log) => log.originalLevel === levelFilter);
             }
 
             if (applicationFilter !== "all") {
@@ -241,7 +241,7 @@ export default function LogsDashboard() {
 
   const logCounts = logs.reduce(
     (acc, log) => {
-      acc[log.level] = (acc[log.level] || 0) + 1;
+      acc[log.originalLevel] = (acc[log.originalLevel] || 0) + 1;
       return acc;
     },
     {} as Record<string, number>,
