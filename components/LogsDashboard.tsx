@@ -303,7 +303,7 @@ export default function LogsDashboard() {
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-white">
-                    Logs Dashboard
+                    Under The Hood
                   </h1>
                   <p className="text-sm text-gray-400">
                     Real-time application monitoring
