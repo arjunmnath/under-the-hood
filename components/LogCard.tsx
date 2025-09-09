@@ -126,7 +126,7 @@ export default function LogCard({
                 </div>
               </div>
 
-              <p className="text-gray-200 text-sm leading-relaxed break-words overflow-x-auto">
+              <p className="text-gray-200 text-sm leading-relaxed break-words overflow-x-auto" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                 {log.message}
               </p>
 
