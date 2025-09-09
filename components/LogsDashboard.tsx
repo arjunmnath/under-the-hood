@@ -53,6 +53,27 @@ import {
   Square,
 } from "lucide-react";
 
+const levelMapping: Record<string, "info" | "warning" | "error" | "debug"> = {
+  shout: "error",
+  severe: "error",
+  warning: "warning",
+  info: "info",
+  config: "info",
+  fine: "debug",
+  finer: "debug",
+  finest: "debug",
+};
+
+
+const levelStyleConfig = {
+  all: "text-white hover:bg-gray-600",
+  info: "text-blue-400 hover:bg-gray-600",
+  warning: "text-yellow-400 hover:bg-gray-600",
+  debug: "text-gray-400 hover:bg-gray-600",
+  error: "text-red-400 hover:bg-gray-600"
+}
+
+
 export default function LogsDashboard() {
   const { user, logout } = useAuth();
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -75,6 +96,9 @@ export default function LogsDashboard() {
     ...Array.from(new Set(logs.map((log) => log.logger))),
   ];
 
+  let uniqueLevel = [
+    ...Array.from(new Set(logs.map((log) => log.originalLevel))),
+  ];
   useEffect(() => {
     if (!user) return;
 
@@ -463,36 +487,19 @@ export default function LogsDashboard() {
                     <SelectValue placeholder="All levels" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-700 border-gray-600">
-                    <SelectItem
+
+                  <SelectItem
                       value="all"
-                      className="text-white hover:bg-gray-600"
+                      className={levelStyleConfig.all}
                     >
                       All
                     </SelectItem>
-                    <SelectItem
-                      value="info"
-                      className="text-blue-400 hover:bg-gray-600"
-                    >
-                      Info
-                    </SelectItem>
-                    <SelectItem
-                      value="warning"
-                      className="text-yellow-400 hover:bg-gray-600"
-                    >
-                      Warning
-                    </SelectItem>
-                    <SelectItem
-                      value="error"
-                      className="text-red-400 hover:bg-gray-600"
-                    >
-                      Error
-                    </SelectItem>
-                    <SelectItem
-                      value="debug"
-                      className="text-gray-400 hover:bg-gray-600"
-                    >
-                      Debug
-                    </SelectItem>
+                    {uniqueLevel.map((level) => <SelectItem
+                      value={level}
+                      className={levelStyleConfig[levelMapping[info]]}>
+                        {level.toUpperCase()}
+                      </SelectItem>)
+                    }
                   </SelectContent>
                 </Select>
               </div>
