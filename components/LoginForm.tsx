@@ -43,18 +43,12 @@ export default function LoginForm() {
             Under the Hood
           </CardTitle>
           <CardDescription className="text-gray-400">
-            Sign in with Google to view your application logs in real-time
+            Sign in with Google to Securely access your application logs in real-time
           </CardDescription>
         </CardHeader>
 
         <CardContent>
           <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <p className="text-sm text-gray-400">
-                Securely access your logs dashboard using your Google account
-              </p>
-            </div>
-
             <form onSubmit={handleGoogleSignIn} className="space-y-4">
               <Button
                 type="submit"
