@@ -77,7 +77,7 @@ export default function LogCard({
   return (
     <Card
       className={cn(
-        "transition-all duration-300 hover:shadow-lg border-l-4 bg-gray-800/50 border-gray-700",
+        "transition-all duration-300 hover:shadow-lg border-l-4 bg-gray-800/50 border-gray-700 overflow-hidden",
         config.color,
       )}
     >
