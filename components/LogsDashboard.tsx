@@ -497,7 +497,7 @@ export default function LogsDashboard() {
                     {uniqueLevel.map((level) => <SelectItem
                       key={level}
                       value={level}
-                      className={levelStyleConfig[levelMapping[info]]}>
+                      className={levelStyleConfig[levelMapping[level]]}>
                         {level.toUpperCase()}
                       </SelectItem>)
                     }
